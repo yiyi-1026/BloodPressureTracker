@@ -22,18 +22,16 @@ final class DataStore {
     func importReadings(_ readings: [ImportedReading]) -> (imported: Int, skipped: Int) {
         var imported = 0
         var skipped = 0
-        
-        // 获取现有的所有记录用于去重
+
         let existingReadings = fetchAll()
         let existingDates = Set(existingReadings.map { $0.measuredAt })
-        
+
         for reading in readings {
-            // 跳过已存在的记录（基于测量时间）
             if existingDates.contains(reading.measuredAt) {
                 skipped += 1
                 continue
             }
-            
+
             let newReading = BPReading(
                 systolic: reading.systolic,
                 diastolic: reading.diastolic,
@@ -43,7 +41,34 @@ final class DataStore {
             modelContext.insert(newReading)
             imported += 1
         }
-        
+
+        try? modelContext.save()
+        return (imported, skipped)
+    }
+
+    func importCSVReadings(_ readings: [CSVImporter.CSVReading]) -> (imported: Int, skipped: Int) {
+        var imported = 0
+        var skipped = 0
+
+        let existingReadings = fetchAll()
+        let existingDates = Set(existingReadings.map { $0.measuredAt })
+
+        for reading in readings {
+            if existingDates.contains(reading.measuredAt) {
+                skipped += 1
+                continue
+            }
+
+            let newReading = BPReading(
+                systolic: reading.systolic,
+                diastolic: reading.diastolic,
+                heartRate: reading.heartRate,
+                measuredAt: reading.measuredAt
+            )
+            modelContext.insert(newReading)
+            imported += 1
+        }
+
         try? modelContext.save()
         return (imported, skipped)
     }

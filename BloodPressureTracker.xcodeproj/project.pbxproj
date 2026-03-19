@@ -12,6 +12,7 @@
 		563DAE7E99F9158F3E83B3CB /* AddReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133B6622A049EBAEFDACF1F0 /* AddReadingView.swift */; };
 		5B06A89E10C1E2CF15314CC9 /* BPBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2163894E0EF41B09ECEC9078 /* BPBadge.swift */; };
 		69845B14EDACD293B60C532B /* TrendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48D9F8F97CF042B95046EFE /* TrendsView.swift */; };
+		89A2A638CFA145B29AF03663 /* CSVImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C5191703096BA062A4CBAC4 /* CSVImporter.swift */; };
 		A6199669AF0E1031D24D7502 /* BloodPressureTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1AD2375067DAD6721FEC72F /* BloodPressureTrackerApp.swift */; };
 		AECF7A129B35F9FE079894FF /* HEALTHKIT_SETUP.md in Resources */ = {isa = PBXBuildFile; fileRef = 9EEDBAB08CFB19BAF05B25AF /* HEALTHKIT_SETUP.md */; };
 		AF76C1C8C7DE4311DEC4D564 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCD0B54A0EAA96BB37D9B23 /* CalendarView.swift */; };
@@ -29,6 +30,7 @@
 		319066A587455761B0F8C79A /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		4BE29ABCE22978ACC3081A64 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4E7A9BFB92E2A2FE5D3B3283 /* BloodPressureTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BloodPressureTracker.entitlements; sourceTree = "<group>"; };
+		7C5191703096BA062A4CBAC4 /* CSVImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVImporter.swift; sourceTree = "<group>"; };
 		963009DF662D90A2B2BCD813 /* BPReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BPReading.swift; sourceTree = "<group>"; };
 		9EEDBAB08CFB19BAF05B25AF /* HEALTHKIT_SETUP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HEALTHKIT_SETUP.md; sourceTree = "<group>"; };
 		AA327D0422B21E48D8441808 /* BloodPressureTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BloodPressureTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -101,6 +103,7 @@
 		DE2013B897EECF75F3C8D45C /* Store */ = {
 			isa = PBXGroup;
 			children = (
+				7C5191703096BA062A4CBAC4 /* CSVImporter.swift */,
 				C14B13FC01B71EC2F88EC6A4 /* DataStore.swift */,
 				F1E9C2F5524E696226841065 /* SettingsView.swift */,
 			);
@@ -138,7 +141,8 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					757A30C769A7283B1C846457 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = UX83PSSW78;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -182,6 +186,7 @@
 				5B06A89E10C1E2CF15314CC9 /* BPBadge.swift in Sources */,
 				16AD6B8E3FB177CA86535D04 /* BPReading.swift in Sources */,
 				A6199669AF0E1031D24D7502 /* BloodPressureTrackerApp.swift in Sources */,
+				89A2A638CFA145B29AF03663 /* CSVImporter.swift in Sources */,
 				AF76C1C8C7DE4311DEC4D564 /* CalendarView.swift in Sources */,
 				F4FBDB8370D83921784458BD /* ContentView.swift in Sources */,
 				B57DD7829EB1273A4908707D /* DataStore.swift in Sources */,
@@ -202,7 +207,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "血压记录";
+				INFOPLIST_KEY_CFBundleDisplayName = bpTracker;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "此应用需要访问您的健康数据以导入血压和心率记录";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "此应用需要写入健康数据以保存血压记录";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -213,7 +220,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.bloodpressure.tracker;
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenhealer1026.bptracker2026;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -227,7 +234,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "血压记录";
+				INFOPLIST_KEY_CFBundleDisplayName = bpTracker;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "此应用需要访问您的健康数据以导入血压和心率记录";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "此应用需要写入健康数据以保存血压记录";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -238,7 +247,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.bloodpressure.tracker;
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenhealer1026.bptracker2026;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -277,9 +286,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = UX83PSSW78;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -341,9 +352,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = UX83PSSW78;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
