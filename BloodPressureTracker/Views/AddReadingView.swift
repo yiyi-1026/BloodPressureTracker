@@ -10,6 +10,11 @@ struct AddReadingView: View {
     @State private var measuredAt = Date()
     @State private var showSuccess = false
     @State private var showValidationAlert = false
+    @FocusState private var focusedField: Field?
+
+    enum Field {
+        case systolic, diastolic, heartRate
+    }
 
     private var systolic: Int? { Int(systolicText) }
     private var diastolic: Int? { Int(diastolicText) }
@@ -68,9 +73,12 @@ struct AddReadingView: View {
 
                 // Form
                 VStack(spacing: 16) {
-                    InputField(label: "收缩压 (高压)", placeholder: "60-260 mmHg", text: $systolicText)
-                    InputField(label: "舒张压 (低压)", placeholder: "40-160 mmHg", text: $diastolicText)
-                    InputField(label: "心率", placeholder: "30-200 bpm", text: $heartRateText)
+                    InputField(label: "收缩压 (高压)", placeholder: "eg: 110 mmHg", text: $systolicText)
+                        .focused($focusedField, equals: .systolic)
+                    InputField(label: "舒张压 (低压)", placeholder: "eg: 80 mmHg", text: $diastolicText)
+                        .focused($focusedField, equals: .diastolic)
+                    InputField(label: "心率", placeholder: "eg: 70 bpm", text: $heartRateText)
+                        .focused($focusedField, equals: .heartRate)
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text("测量时间")
@@ -90,6 +98,7 @@ struct AddReadingView: View {
 
                 // Submit button
                 Button {
+                    focusedField = nil
                     saveReading()
                 } label: {
                     Text("保存记录")
@@ -138,6 +147,20 @@ struct AddReadingView: View {
             .padding(.top, 8)
         }
         .background(Color(.systemGroupedBackground))
+        .onTapGesture {
+            focusedField = nil
+        }
+        .onAppear {
+            measuredAt = Date()
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("完成") {
+                    focusedField = nil
+                }
+            }
+        }
         .overlay {
             if showSuccess {
                 SuccessToast()
@@ -183,8 +206,12 @@ struct InputField: View {
                 .keyboardType(.numberPad)
                 .font(.system(size: 18))
                 .padding(12)
-                .background(Color(.systemGroupedBackground))
+                .background(Color(.tertiarySystemFill))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(.separator), lineWidth: 0.5)
+                )
         }
     }
 }

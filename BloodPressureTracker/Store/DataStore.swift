@@ -113,6 +113,18 @@ final class DataStore {
         return Set(readings.map { calendar.component(.day, from: $0.measuredAt) })
     }
 
+    func readingsForDateRange(from startDate: Date, to endDate: Date) -> [BPReading] {
+        let start = Calendar.current.startOfDay(for: startDate)
+        guard let end = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: endDate)) else {
+            return []
+        }
+        let predicate = #Predicate<BPReading> { r in
+            r.measuredAt >= start && r.measuredAt < end
+        }
+        let descriptor = FetchDescriptor<BPReading>(predicate: predicate, sortBy: [SortDescriptor(\.measuredAt)])
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
     func readingsForDays(_ days: Int) -> [BPReading] {
         if days == 0 {
             return fetchAll()
