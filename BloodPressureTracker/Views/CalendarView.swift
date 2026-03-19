@@ -78,7 +78,7 @@ struct CalendarView: View {
                 HStack(spacing: 12) {
                     StatCard(title: "总记录", value: "\(store.totalCount())", icon: "list.bullet")
                     StatCard(title: "本月", value: "\(store.monthCount(for: currentMonth))", icon: "calendar")
-                    StatCard(title: "剩余天数", value: "\(remainingDaysInMonth)", icon: "clock")
+                    StatCard(title: "本月剩余天数", value: "\(remainingDaysInMonth)", icon: "clock")
                 }
                 .padding(.horizontal)
 

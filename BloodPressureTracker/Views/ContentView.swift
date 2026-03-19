@@ -2,10 +2,12 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var selectedTab = 0
+    @State private var calendarResetID = UUID()
 
     var body: some View {
         TabView(selection: $selectedTab) {
             CalendarView()
+                .id(calendarResetID)
                 .tabItem {
                     Image(systemName: "calendar")
                     Text("日历")
@@ -25,7 +27,7 @@ struct ContentView: View {
                     Text("趋势")
                 }
                 .tag(2)
-            
+
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
@@ -34,5 +36,10 @@ struct ContentView: View {
                 .tag(3)
         }
         .tint(Color.accentColor)
+        .onChange(of: selectedTab) { oldValue, newValue in
+            if newValue == 0 {
+                calendarResetID = UUID()
+            }
+        }
     }
 }
