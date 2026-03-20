@@ -219,7 +219,9 @@ struct BPScannerView: View {
                     return
                 }
 
-                let allText = observations.compactMap { observation in
+                // Sort top-to-bottom (Vision Y: 0=bottom, 1=top → descending = top first)
+                let sortedObservations = observations.sorted { $0.boundingBox.minY > $1.boundingBox.minY }
+                let allText = sortedObservations.compactMap { observation in
                     observation.topCandidates(1).first?.string
                 }
 
@@ -234,7 +236,7 @@ struct BPScannerView: View {
         }
 
         request.recognitionLevel = .accurate
-        request.recognitionLanguages = ["en-US", "zh-Hans"]
+        request.recognitionLanguages = ["en-US"]
         request.usesLanguageCorrection = false
 
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
@@ -263,38 +265,34 @@ struct BPScannerView: View {
     }
 
     private func assignBPValues(from numbers: [Int]) {
-        guard numbers.count >= 3 else {
-            // If we have fewer than 3 numbers, fill what we can
-            if numbers.count >= 1 { systolicText = "\(numbers[0])" }
-            if numbers.count >= 2 { diastolicText = "\(numbers[1])" }
+        // numbers are already in top-to-bottom screen order (systolic, diastolic, heart rate)
+        let valid = numbers.filter { (30...260).contains($0) }
+        guard !valid.isEmpty else { return }
+
+        // Try positional assignment first: top=systolic, middle=diastolic, bottom=heart rate
+        if valid.count >= 3 {
+            let sys = valid[0], dia = valid[1], hr = valid[2]
+            if (80...260).contains(sys) && (40...160).contains(dia) && dia < sys && (30...200).contains(hr) {
+                systolicText = "\(sys)"
+                diastolicText = "\(dia)"
+                heartRateText = "\(hr)"
+                return
+            }
+        }
+
+        // Fallback: value-based assignment (systolic is largest)
+        let sorted = valid.sorted(by: >)
+        guard let sysVal = sorted.first(where: { (80...260).contains($0) }) else {
+            systolicText = "\(valid[0])"
             return
         }
+        systolicText = "\(sysVal)"
 
-        // Blood pressure monitors typically show: SYS (highest), DIA (middle), PUL (lowest)
-        // Sort and assign: largest = systolic, middle = diastolic, smallest = heart rate
-        let sorted = numbers.sorted(by: >)
-
-        // Find the most likely systolic (typically 80-200)
-        let sysCandidates = sorted.filter { (80...260).contains($0) }
-        // Find likely diastolic (typically 40-120)
-        let diaCandidates = sorted.filter { (40...160).contains($0) }
-        // Find likely heart rate (typically 40-120)
-        let hrCandidates = sorted.filter { (30...200).contains($0) }
-
-        if sysCandidates.count >= 1 {
-            systolicText = "\(sysCandidates[0])"
-        }
-
-        // For diastolic, pick the first candidate that's less than systolic
-        let sysVal = Int(systolicText) ?? 999
-        if let dia = diaCandidates.first(where: { $0 < sysVal }) {
-            diastolicText = "\(dia)"
-        }
-
-        // For heart rate, pick a candidate that's different from sys and dia
-        let diaVal = Int(diastolicText) ?? 999
-        if let hr = hrCandidates.first(where: { $0 != sysVal && $0 != diaVal }) {
-            heartRateText = "\(hr)"
+        if let diaVal = sorted.first(where: { $0 < sysVal && (40...160).contains($0) }) {
+            diastolicText = "\(diaVal)"
+            if let hrVal = sorted.first(where: { $0 != sysVal && $0 != diaVal && (30...200).contains($0) }) {
+                heartRateText = "\(hrVal)"
+            }
         }
     }
 }
