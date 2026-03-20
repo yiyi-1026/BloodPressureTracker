@@ -20,6 +20,7 @@
 		DE22F8FF09B47E3886E16235 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E9C2F5524E696226841065 /* SettingsView.swift */; };
 		E08790D3ED3962944C071360 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4BE29ABCE22978ACC3081A64 /* Assets.xcassets */; };
 		F4FBDB8370D83921784458BD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E31C9EE8A1B6BD076346AA8 /* ContentView.swift */; };
+		A1B2C3D4E5F6A7B890123456 /* BPScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 654321098BA7F6E5D4C3B2A1 /* BPScannerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,8 @@
 		C14B13FC01B71EC2F88EC6A4 /* DataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStore.swift; sourceTree = "<group>"; };
 		C1AD2375067DAD6721FEC72F /* BloodPressureTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloodPressureTrackerApp.swift; sourceTree = "<group>"; };
 		F1E9C2F5524E696226841065 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		654321098BA7F6E5D4C3B2A1 /* BPScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BPScannerView.swift; sourceTree = "<group>"; };
+		B3C4D5E6F7A8B9C0D1E2F3A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -47,6 +50,7 @@
 				4BE29ABCE22978ACC3081A64 /* Assets.xcassets */,
 				4E7A9BFB92E2A2FE5D3B3283 /* BloodPressureTracker.entitlements */,
 				C1AD2375067DAD6721FEC72F /* BloodPressureTrackerApp.swift */,
+				B3C4D5E6F7A8B9C0D1E2F3A4 /* Info.plist */,
 				CEE8682DB0D52AE94956D383 /* Models */,
 				DE2013B897EECF75F3C8D45C /* Store */,
 				DE1C88A81DBF0D2379036FE2 /* Views */,
@@ -90,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				133B6622A049EBAEFDACF1F0 /* AddReadingView.swift */,
+				654321098BA7F6E5D4C3B2A1 /* BPScannerView.swift */,
 				2BCD0B54A0EAA96BB37D9B23 /* CalendarView.swift */,
 				0E31C9EE8A1B6BD076346AA8 /* ContentView.swift */,
 				9EEDBAB08CFB19BAF05B25AF /* HEALTHKIT_SETUP.md */,
@@ -183,6 +188,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				563DAE7E99F9158F3E83B3CB /* AddReadingView.swift in Sources */,
+				A1B2C3D4E5F6A7B890123456 /* BPScannerView.swift in Sources */,
 				5B06A89E10C1E2CF15314CC9 /* BPBadge.swift in Sources */,
 				16AD6B8E3FB177CA86535D04 /* BPReading.swift in Sources */,
 				A6199669AF0E1031D24D7502 /* BloodPressureTrackerApp.swift in Sources */,
@@ -207,9 +213,12 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BloodPressureTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = bpTracker;
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机拍摄血压计屏幕，自动识别血压数值";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "此应用需要访问您的健康数据以导入血压和心率记录";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "此应用需要写入健康数据以保存血压记录";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择血压计屏幕照片，自动识别血压数值";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -234,9 +243,12 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BloodPressureTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = bpTracker;
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机拍摄血压计屏幕，自动识别血压数值";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "此应用需要访问您的健康数据以导入血压和心率记录";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "此应用需要写入健康数据以保存血压记录";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择血压计屏幕照片，自动识别血压数值";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -10,6 +10,7 @@ struct AddReadingView: View {
     @State private var measuredAt = Date()
     @State private var showSuccess = false
     @State private var showValidationAlert = false
+    @State private var showScanner = false
     @FocusState private var focusedField: Field?
 
     enum Field {
@@ -34,11 +35,23 @@ struct AddReadingView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Title
-                Text("添加血压记录")
-                    .font(.system(size: 28, weight: .bold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
+                // Title + Camera button
+                HStack {
+                    Text("添加血压记录")
+                        .font(.system(size: 28, weight: .bold))
+                    Spacer()
+                    Button {
+                        showScanner = true
+                    } label: {
+                        Image(systemName: "camera.fill")
+                            .font(.title2)
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            .background(Color.accentColor)
+                            .clipShape(Circle())
+                    }
+                }
+                .padding(.horizontal)
 
                 // Real-time indicator
                 if let classification = currentClassification {
@@ -171,6 +184,14 @@ struct AddReadingView: View {
             Button("确定", role: .cancel) {}
         } message: {
             Text("请确保所有数值在合理范围内")
+        }
+        .sheet(isPresented: $showScanner) {
+            BPScannerView { sys, dia, hr in
+                systolicText = "\(sys)"
+                diastolicText = "\(dia)"
+                heartRateText = "\(hr)"
+                measuredAt = Date()
+            }
         }
     }
 

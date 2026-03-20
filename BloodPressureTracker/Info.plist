@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>需要使用相机拍摄血压计屏幕，自动识别血压数值</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要访问相册以选择血压计屏幕照片，自动识别血压数值</string>
+</dict>
+</plist>
