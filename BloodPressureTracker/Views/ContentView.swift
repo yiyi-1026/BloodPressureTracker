@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedTab = 0
     @State private var calendarResetID = UUID()
+    @State private var trendsResetID = UUID()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -22,6 +23,7 @@ struct ContentView: View {
                 .tag(1)
 
             TrendsView()
+                .id(trendsResetID)
                 .tabItem {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                     Text("趋势")
@@ -39,6 +41,8 @@ struct ContentView: View {
         .onChange(of: selectedTab) { oldValue, newValue in
             if newValue == 0 {
                 calendarResetID = UUID()
+            } else if newValue == 2 {
+                trendsResetID = UUID()
             }
         }
     }

@@ -3,7 +3,7 @@ import Charts
 
 struct TrendsView: View {
     @Environment(DataStore.self) private var store
-    @State private var selectedDays = 1
+    @State private var selectedDays = 5
     @State private var showCustomDatePicker = false
     @State private var customStartDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
     @State private var customEndDate = Date()
@@ -66,15 +66,14 @@ struct TrendsView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                // Title
+        VStack(spacing: 0) {
+            // Sticky header: title + filter
+            VStack(spacing: 12) {
                 Text("趋势分析")
                     .font(.system(size: 28, weight: .bold))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
 
-                // Time filter
                 HStack(spacing: 8) {
                     ForEach(dayOptions, id: \.value) { option in
                         Button {
@@ -109,7 +108,6 @@ struct TrendsView: View {
                 }
                 .padding(.horizontal)
 
-                // Custom date range display
                 if isCustomRange {
                     HStack {
                         Image(systemName: "calendar")
@@ -120,7 +118,14 @@ struct TrendsView: View {
                     }
                     .padding(.horizontal)
                 }
+            }
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            .background(Color(.systemGroupedBackground))
 
+            // Scrollable content
+            ScrollView {
+            VStack(spacing: 16) {
                 if readings.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "chart.line.uptrend.xyaxis")
@@ -151,7 +156,12 @@ struct TrendsView: View {
             .padding(.top, 8)
             .padding(.bottom, 20)
         }
+        }
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            isCustomRange = false
+            selectedDays = 5
+        }
         .sheet(isPresented: $showCustomDatePicker) {
             CustomDateRangePicker(
                 startDate: $customStartDate,
