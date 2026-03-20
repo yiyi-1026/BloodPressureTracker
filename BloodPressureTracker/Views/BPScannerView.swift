@@ -185,7 +185,23 @@ struct BPScannerView: View {
         diastolicText = ""
         heartRateText = ""
         isProcessing = true
-        recognizeText(from: image)
+        let processedImage = preprocessForOCR(image)
+        recognizeText(from: processedImage)
+    }
+
+    // Preprocess image to improve OCR accuracy on LCD segmented displays
+    private func preprocessForOCR(_ image: UIImage) -> UIImage {
+        guard let ciImage = CIImage(image: image) else { return image }
+        let enhanced = ciImage.applyingFilter("CIColorControls", parameters: [
+            kCIInputSaturationKey: 0.0,   // grayscale
+            kCIInputContrastKey: 1.8,
+            kCIInputBrightnessKey: 0.05
+        ])
+        let context = CIContext(options: nil)
+        if let cgImage = context.createCGImage(enhanced, from: enhanced.extent) {
+            return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
+        }
+        return image
     }
 
     private func confirmReading() {
@@ -219,15 +235,11 @@ struct BPScannerView: View {
                     return
                 }
 
-                let allText = observations.compactMap { observation in
-                    observation.topCandidates(1).first?.string
-                }
+                let positioned = self.extractNumbersWithPositions(from: observations)
+                recognizedNumbers = positioned.map { $0.value }
+                self.assignBPValuesFromPositions(positioned)
 
-                let numbers = extractNumbers(from: allText)
-                recognizedNumbers = numbers
-                assignBPValues(from: numbers)
-
-                if numbers.isEmpty {
+                if positioned.isEmpty {
                     errorMessage = "未识别到数字，请重新拍摄"
                 }
             }
@@ -236,6 +248,7 @@ struct BPScannerView: View {
         request.recognitionLevel = .accurate
         request.recognitionLanguages = ["en-US", "zh-Hans"]
         request.usesLanguageCorrection = false
+        request.minimumTextHeight = 0.02  // detect smaller numbers too
 
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
         DispatchQueue.global(qos: .userInitiated).async {
@@ -243,58 +256,74 @@ struct BPScannerView: View {
         }
     }
 
-    private func extractNumbers(from texts: [String]) -> [Int] {
-        var numbers: [Int] = []
-        let pattern = #"\d{2,3}"#
-        let regex = try! NSRegularExpression(pattern: pattern)
+    private struct NumberPosition {
+        let value: Int
+        let midY: CGFloat   // Vision normalized Y: 1.0 = top, 0.0 = bottom
+        let height: CGFloat // bounding box height, larger = more prominent
+    }
 
-        for text in texts {
+    // Extract 2-3 digit numbers together with their vertical positions in the image
+    private func extractNumbersWithPositions(from observations: [VNRecognizedTextObservation]) -> [NumberPosition] {
+        var results: [NumberPosition] = []
+        let pattern = #"\d{2,3}"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return results }
+
+        for observation in observations {
+            guard let text = observation.topCandidates(1).first?.string else { continue }
+            let midY = observation.boundingBox.midY
+            let height = observation.boundingBox.height
+
             let range = NSRange(text.startIndex..., in: text)
             let matches = regex.matches(in: text, range: range)
             for match in matches {
                 if let matchRange = Range(match.range, in: text),
                    let num = Int(text[matchRange]),
                    (30...260).contains(num) {
-                    numbers.append(num)
+                    results.append(NumberPosition(value: num, midY: midY, height: height))
                 }
             }
         }
-        return numbers
+        return results
     }
 
-    private func assignBPValues(from numbers: [Int]) {
-        guard numbers.count >= 3 else {
-            // If we have fewer than 3 numbers, fill what we can
-            if numbers.count >= 1 { systolicText = "\(numbers[0])" }
-            if numbers.count >= 2 { diastolicText = "\(numbers[1])" }
+    // Assign BP values using vertical position:
+    // Blood pressure monitors display SYS at top, DIA in middle, heart rate at bottom.
+    // Vision framework Y coordinates: 1.0 = top of image, 0.0 = bottom.
+    private func assignBPValuesFromPositions(_ positions: [NumberPosition]) {
+        guard !positions.isEmpty else { return }
+
+        // Sort top-to-bottom (descending Y)
+        let sorted = positions.sorted { $0.midY > $1.midY }
+
+        let sysRange = 60...260
+        let diaRange = 40...160
+        let hrRange  = 30...200
+
+        // Systolic: topmost number in a valid systolic range
+        guard let sys = sorted.first(where: { sysRange.contains($0.value) }) else {
+            // Fallback: assign by position order
+            if sorted.count >= 1 { systolicText  = "\(sorted[0].value)" }
+            if sorted.count >= 2 { diastolicText  = "\(sorted[1].value)" }
+            if sorted.count >= 3 { heartRateText  = "\(sorted[2].value)" }
             return
         }
+        systolicText = "\(sys.value)"
 
-        // Blood pressure monitors typically show: SYS (highest), DIA (middle), PUL (lowest)
-        // Sort and assign: largest = systolic, middle = diastolic, smallest = heart rate
-        let sorted = numbers.sorted(by: >)
-
-        // Find the most likely systolic (typically 80-200)
-        let sysCandidates = sorted.filter { (80...260).contains($0) }
-        // Find likely diastolic (typically 40-120)
-        let diaCandidates = sorted.filter { (40...160).contains($0) }
-        // Find likely heart rate (typically 40-120)
-        let hrCandidates = sorted.filter { (30...200).contains($0) }
-
-        if sysCandidates.count >= 1 {
-            systolicText = "\(sysCandidates[0])"
+        // Diastolic: first number below systolic that is less than systolic value
+        let belowSys = sorted.filter { $0.midY < sys.midY }
+        guard let dia = belowSys.first(where: { diaRange.contains($0.value) && $0.value < sys.value }) else {
+            if belowSys.count >= 1 { diastolicText = "\(belowSys[0].value)" }
+            if belowSys.count >= 2 { heartRateText  = "\(belowSys[1].value)" }
+            return
         }
+        diastolicText = "\(dia.value)"
 
-        // For diastolic, pick the first candidate that's less than systolic
-        let sysVal = Int(systolicText) ?? 999
-        if let dia = diaCandidates.first(where: { $0 < sysVal }) {
-            diastolicText = "\(dia)"
-        }
-
-        // For heart rate, pick a candidate that's different from sys and dia
-        let diaVal = Int(diastolicText) ?? 999
-        if let hr = hrCandidates.first(where: { $0 != sysVal && $0 != diaVal }) {
-            heartRateText = "\(hr)"
+        // Heart rate: first number below diastolic, not equal to sys or dia
+        let belowDia = sorted.filter { $0.midY < dia.midY }
+        if let hr = belowDia.first(where: { hrRange.contains($0.value) && $0.value != sys.value && $0.value != dia.value }) {
+            heartRateText = "\(hr.value)"
+        } else if let hr = sorted.first(where: { hrRange.contains($0.value) && $0.value != sys.value && $0.value != dia.value }) {
+            heartRateText = "\(hr.value)"
         }
     }
 }
