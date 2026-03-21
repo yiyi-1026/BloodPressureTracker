@@ -148,6 +148,16 @@ struct AddReadingView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(
+                            Color(
+                                red: level.color.red,
+                                green: level.color.green,
+                                blue: level.color.blue
+                            ).opacity(0.15)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
                 .padding()
