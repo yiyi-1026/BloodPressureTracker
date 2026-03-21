@@ -9,6 +9,9 @@ struct TrendsView: View {
     @State private var customEndDate = Date()
     @State private var isCustomRange = false
     @State private var selectedReading: BPReading?
+    @State private var selectedHRReading: BPReading?
+    @State private var selectedMorningReading: BPReading?
+    @State private var selectedEveningReading: BPReading?
 
     private let dayOptions = [
         (label: "1天", value: 1),
@@ -43,6 +46,28 @@ struct TrendsView: View {
         let recent = weeklyData.last!.avgHeartRate
         let older = weeklyData.dropLast().map(\.avgHeartRate).reduce(0, +) / Double(weeklyData.count - 1)
         return (recent, older)
+    }
+
+    private var morningReadings: [BPReading] {
+        readings.filter { r in
+            let hour = Calendar.current.component(.hour, from: r.measuredAt)
+            return hour >= 5 && hour < 8
+        }
+    }
+
+    private var eveningReadings: [BPReading] {
+        readings.filter { r in
+            let hour = Calendar.current.component(.hour, from: r.measuredAt)
+            return hour >= 18 && hour < 22
+        }
+    }
+
+    private func timeRangeYDomain(for rs: [BPReading]) -> ClosedRange<Int> {
+        guard !rs.isEmpty else { return 40...200 }
+        let allValues = rs.flatMap { [$0.systolic, $0.diastolic, $0.heartRate] }
+        let lower = max(0, (allValues.min() ?? 40) - 15)
+        let upper = (allValues.max() ?? 180) + 15
+        return lower...upper
     }
 
     // Dynamic Y axis range for BP chart
@@ -148,6 +173,24 @@ struct TrendsView: View {
 
                     // HR Chart
                     hrChart
+
+                    // Morning trend (5:00-8:00)
+                    timeRangeChart(
+                        title: "晨间趋势",
+                        subtitle: "5:00 – 8:00",
+                        icon: "sunrise.fill",
+                        readings: morningReadings,
+                        selectedReading: $selectedMorningReading
+                    )
+
+                    // Evening trend (18:00-22:00)
+                    timeRangeChart(
+                        title: "晚间趋势",
+                        subtitle: "18:00 – 22:00",
+                        icon: "moon.stars.fill",
+                        readings: eveningReadings,
+                        selectedReading: $selectedEveningReading
+                    )
 
                     // Weekly averages table
                     weeklyTable
@@ -392,6 +435,32 @@ struct TrendsView: View {
                 .font(.headline)
                 .padding(.horizontal)
 
+            // Selected reading tooltip
+            if let selected = selectedHRReading {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(formatDateTime(selected.measuredAt))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("心率: \(selected.heartRate) bpm")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.red)
+                    }
+                    Spacer()
+                    Button {
+                        withAnimation { selectedHRReading = nil }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(10)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .padding(.horizontal)
+            }
+
             Chart {
                 ForEach(readings) { reading in
                     AreaMark(
@@ -407,8 +476,18 @@ struct TrendsView: View {
                     )
                     .foregroundStyle(.red)
                     .interpolationMethod(.catmullRom)
-                    .symbol(Circle())
-                    .symbolSize(20)
+                    .symbol {
+                        Circle()
+                            .fill(selectedHRReading?.id == reading.id ? .red : Color.red.opacity(0.7))
+                            .frame(width: selectedHRReading?.id == reading.id ? 8 : 5)
+                    }
+                }
+
+                // Selected point vertical line
+                if let selected = selectedHRReading {
+                    RuleMark(x: .value("选中", selected.measuredAt))
+                        .foregroundStyle(.gray.opacity(0.3))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                 }
 
                 if averages.count > 0 {
@@ -418,8 +497,188 @@ struct TrendsView: View {
                 }
             }
             .chartYScale(domain: hrYDomain)
+            .chartOverlay { proxy in
+                GeometryReader { _ in
+                    Rectangle()
+                        .fill(Color.clear)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onEnded { value in
+                                    let x = value.location.x
+                                    guard let date: Date = proxy.value(atX: x) else { return }
+                                    let nearest = readings.min { a, b in
+                                        abs(a.measuredAt.timeIntervalSince(date)) < abs(b.measuredAt.timeIntervalSince(date))
+                                    }
+                                    withAnimation(.easeInOut(duration: 0.15)) {
+                                        selectedHRReading = nearest
+                                    }
+                                }
+                        )
+                }
+            }
             .frame(height: 180)
             .padding(.horizontal)
+        }
+        .padding(.vertical)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 2, y: 1)
+        .padding(.horizontal)
+    }
+
+    // MARK: - Time Range Chart
+
+    @ViewBuilder
+    private func timeRangeChart(title: String, subtitle: String, icon: String, readings: [BPReading], selectedReading: Binding<BPReading?>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title)
+                        .font(.headline)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal)
+
+            if readings.isEmpty {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 6) {
+                        Image(systemName: "clock.badge.xmark")
+                            .font(.system(size: 28))
+                            .foregroundStyle(.secondary)
+                        Text("该时段暂无数据")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                .frame(height: 100)
+            } else {
+                // Selected reading tooltip
+                if let selected = selectedReading.wrappedValue {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(formatDateTime(selected.measuredAt))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            HStack(spacing: 8) {
+                                Text("收缩压: \(selected.systolic)")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(Color.accentColor)
+                                Text("舒张压: \(selected.diastolic)")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(Color.cyan)
+                                Text("心率: \(selected.heartRate)")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.red)
+                            }
+                        }
+                        Spacer()
+                        Button {
+                            withAnimation { selectedReading.wrappedValue = nil }
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(10)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.horizontal)
+                }
+
+                Chart {
+                    ForEach(readings) { reading in
+                        LineMark(
+                            x: .value("时间", reading.measuredAt),
+                            y: .value("收缩压", reading.systolic),
+                            series: .value("类型", "收缩压")
+                        )
+                        .foregroundStyle(Color.accentColor)
+                        .interpolationMethod(.catmullRom)
+                        .symbol {
+                            Circle()
+                                .fill(selectedReading.wrappedValue?.id == reading.id ? Color.accentColor : Color.accentColor.opacity(0.7))
+                                .frame(width: selectedReading.wrappedValue?.id == reading.id ? 8 : 5)
+                        }
+
+                        LineMark(
+                            x: .value("时间", reading.measuredAt),
+                            y: .value("舒张压", reading.diastolic),
+                            series: .value("类型", "舒张压")
+                        )
+                        .foregroundStyle(Color.cyan)
+                        .interpolationMethod(.catmullRom)
+                        .symbol {
+                            Circle()
+                                .fill(selectedReading.wrappedValue?.id == reading.id ? Color.cyan : Color.cyan.opacity(0.7))
+                                .frame(width: selectedReading.wrappedValue?.id == reading.id ? 8 : 5)
+                        }
+
+                        LineMark(
+                            x: .value("时间", reading.measuredAt),
+                            y: .value("心率", reading.heartRate),
+                            series: .value("类型", "心率")
+                        )
+                        .foregroundStyle(Color.red)
+                        .interpolationMethod(.catmullRom)
+                        .symbol {
+                            Circle()
+                                .fill(selectedReading.wrappedValue?.id == reading.id ? Color.red : Color.red.opacity(0.7))
+                                .frame(width: selectedReading.wrappedValue?.id == reading.id ? 8 : 5)
+                        }
+                    }
+
+                    // Selected point vertical line
+                    if let selected = selectedReading.wrappedValue {
+                        RuleMark(x: .value("选中", selected.measuredAt))
+                            .foregroundStyle(.gray.opacity(0.3))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    }
+
+                    RuleMark(y: .value("高血压线", 140))
+                        .foregroundStyle(.red.opacity(0.4))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
+                        .annotation(position: .trailing, alignment: .leading) {
+                            Text("140")
+                                .font(.caption2)
+                                .foregroundStyle(.red.opacity(0.7))
+                        }
+                }
+                .chartYScale(domain: timeRangeYDomain(for: readings))
+                .chartLegend(position: .bottom)
+                .chartOverlay { proxy in
+                    GeometryReader { _ in
+                        Rectangle()
+                            .fill(Color.clear)
+                            .contentShape(Rectangle())
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onEnded { value in
+                                        let x = value.location.x
+                                        guard let date: Date = proxy.value(atX: x) else { return }
+                                        let nearest = readings.min { a, b in
+                                            abs(a.measuredAt.timeIntervalSince(date)) < abs(b.measuredAt.timeIntervalSince(date))
+                                        }
+                                        withAnimation(.easeInOut(duration: 0.15)) {
+                                            selectedReading.wrappedValue = nearest
+                                        }
+                                    }
+                            )
+                    }
+                }
+                .frame(height: 220)
+                .padding(.horizontal)
+            }
         }
         .padding(.vertical)
         .background(Color(.systemBackground))
