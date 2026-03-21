@@ -11,6 +11,7 @@ struct AddReadingView: View {
     @State private var showSuccess = false
     @State private var showValidationAlert = false
     @State private var showScanner = false
+    @State private var showBPGuide = false
     @FocusState private var focusedField: Field?
 
     enum Field {
@@ -127,9 +128,19 @@ struct AddReadingView: View {
 
                 // Reference guide
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("血压参考标准")
-                        .font(.headline)
-                        .padding(.bottom, 4)
+                    HStack {
+                        Text("血压参考标准")
+                            .font(.headline)
+                        Button {
+                            showBPGuide = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 18))
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.bottom, 4)
 
                     ForEach(BPClassification.allCases, id: \.self) { level in
                         HStack {
@@ -203,6 +214,9 @@ struct AddReadingView: View {
                 measuredAt = Date()
             }
         }
+        .sheet(isPresented: $showBPGuide) {
+            BPGuideSheet()
+        }
     }
 
     private func saveReading() {
@@ -220,6 +234,147 @@ struct AddReadingView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             withAnimation { showSuccess = false }
         }
+    }
+}
+
+// MARK: - BP Guide Sheet
+
+struct BPGuideSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    private struct GuideRow {
+        let classification: BPClassification
+        let systolicRange: String
+        let diastolicRange: String
+        let advice: String
+    }
+
+    private let rows: [GuideRow] = [
+        GuideRow(classification: .normal,
+                 systolicRange: "< 120",
+                 diastolicRange: "< 80",
+                 advice: "血压处于理想水平，保持健康生活方式即可。建议每年复查一次。"),
+        GuideRow(classification: .elevated,
+                 systolicRange: "120–129",
+                 diastolicRange: "< 80",
+                 advice: "血压轻度偏高，尚未达到高血压标准。建议改善饮食、增加运动，每3–6个月复查。"),
+        GuideRow(classification: .high1,
+                 systolicRange: "130–139",
+                 diastolicRange: "80–89",
+                 advice: "高血压1期。建议生活方式干预，如有心脑血管高风险，医生可能建议药物治疗。"),
+        GuideRow(classification: .high2,
+                 systolicRange: "≥ 140",
+                 diastolicRange: "≥ 90",
+                 advice: "高血压2期。通常需要生活方式干预联合降压药物治疗，定期随访。"),
+        GuideRow(classification: .crisis,
+                 systolicRange: "≥ 180",
+                 diastolicRange: "≥ 120",
+                 advice: "高血压危象！需立即就医，可能伴随靶器官损害，属于内科急症。"),
+    ]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+
+                    // Source note
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundStyle(.blue)
+                        Text("依据 AHA/ACC 2017 血压指南")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal)
+
+                    // Classification cards
+                    ForEach(rows, id: \.classification) { row in
+                        let c = row.classification
+                        let bpColor = Color(red: c.color.red, green: c.color.green, blue: c.color.blue)
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            // Header row: color badge + name
+                            HStack(spacing: 10) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(bpColor)
+                                    .frame(width: 6, height: 36)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(c.rawValue)
+                                        .font(.headline)
+                                        .foregroundStyle(bpColor)
+                                    Text(c.rangeDescription)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                            }
+
+                            // BP range columns
+                            HStack(spacing: 0) {
+                                BPRangeCell(label: "收缩压 (高压)", value: row.systolicRange, color: bpColor)
+                                Divider().frame(height: 36)
+                                BPRangeCell(label: "舒张压 (低压)", value: row.diastolicRange, color: bpColor)
+                            }
+                            .background(bpColor.opacity(0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(bpColor.opacity(0.2), lineWidth: 1))
+
+                            // Advice
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "lightbulb.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(.orange)
+                                    .padding(.top, 1)
+                                Text(row.advice)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.primary.opacity(0.85))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .padding(14)
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .shadow(color: bpColor.opacity(0.12), radius: 4, y: 2)
+                        .padding(.horizontal)
+                    }
+
+                    // Footer note
+                    Text("注：以上标准适用于18岁以上成人，儿童及特殊人群请遵医嘱。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
+                }
+                .padding(.top, 12)
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("血压分级详解")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("关闭") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+private struct BPRangeCell: View {
+    let label: String
+    let value: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 16, weight: .semibold, design: .monospaced))
+                .foregroundStyle(color)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
     }
 }
 
