@@ -27,16 +27,27 @@ struct ReadingRow: View {
 
     private var timeString: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
+        formatter.dateFormat = "h:mm"
+        return formatter.string(from: reading.measuredAt)
+    }
+
+    private var ampmString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "a"
         return formatter.string(from: reading.measuredAt)
     }
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(timeString)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .frame(width: 50, alignment: .leading)
+            VStack(spacing: 1) {
+                Text(timeString)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Text(ampmString)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: 50, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(reading.systolic)/\(reading.diastolic) mmHg")

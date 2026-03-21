@@ -194,6 +194,9 @@ struct TrendsView: View {
 
                     // Weekly averages table
                     weeklyTable
+
+                    // Detail data list
+                    detailList
                 }
             }
             .padding(.top, 8)
@@ -735,6 +738,66 @@ struct TrendsView: View {
                         .padding(.vertical, 6)
 
                         if week.id != weeklyData.last?.id {
+                            Divider().padding(.leading, 12)
+                        }
+                    }
+                }
+                .background(Color(.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .shadow(color: .black.opacity(0.06), radius: 2, y: 1)
+                .padding(.horizontal)
+            }
+        }
+    }
+}
+
+// MARK: - Detail List
+
+extension TrendsView {
+    @ViewBuilder
+    var detailList: some View {
+        let displayReadings = Array(readings.sorted { $0.measuredAt < $1.measuredAt }.prefix(20))
+        if !displayReadings.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("详细数据")
+                    .font(.headline)
+                    .padding(.horizontal)
+
+                VStack(spacing: 0) {
+                    // Header
+                    HStack {
+                        Text("日期时间").fontWeight(.semibold).frame(maxWidth: .infinity, alignment: .leading)
+                        Text("高压").fontWeight(.semibold).frame(width: 40)
+                        Text("低压").fontWeight(.semibold).frame(width: 40)
+                        Text("心率").fontWeight(.semibold).frame(width: 40)
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+
+                    Divider()
+
+                    ForEach(displayReadings) { reading in
+                        HStack {
+                            Text(formatDateTime(reading.measuredAt))
+                                .font(.caption)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text("\(reading.systolic)")
+                                .font(.caption).fontWeight(.medium)
+                                .frame(width: 40)
+                            Text("\(reading.diastolic)")
+                                .font(.caption).fontWeight(.medium)
+                                .frame(width: 40)
+                            Text("\(reading.heartRate)")
+                                .font(.caption).fontWeight(.medium)
+                                .foregroundStyle(.red)
+                                .frame(width: 40)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+
+                        if reading.id != displayReadings.last?.id {
                             Divider().padding(.leading, 12)
                         }
                     }
