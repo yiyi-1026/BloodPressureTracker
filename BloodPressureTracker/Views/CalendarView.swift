@@ -243,6 +243,8 @@ struct CalendarDayCell: View {
     let isToday: Bool
     let isSelected: Bool
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         ZStack {
             Circle()
@@ -250,6 +252,14 @@ struct CalendarDayCell: View {
 
             Circle()
                 .strokeBorder(isToday ? Color.accentColor : Color.clear, lineWidth: 2)
+
+            if isSelected && !isToday {
+                Circle()
+                    .stroke(
+                        colorScheme == .dark ? Color.white : Color.accentColor,
+                        style: StrokeStyle(lineWidth: 2, dash: [6, 3])
+                    )
+            }
 
             VStack(spacing: 1) {
                 Text("\(day)")
