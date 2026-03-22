@@ -407,7 +407,7 @@ struct SuccessToast: View {
         VStack {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Color.appGreen)
                 Text("保存成功")
                     .fontWeight(.medium)
             }

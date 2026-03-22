@@ -249,7 +249,7 @@ struct CalendarDayCell: View {
                 .fill(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
 
             Circle()
-                .strokeBorder(isToday ? Color.blue : Color.clear, lineWidth: 2)
+                .strokeBorder(isToday ? Color.accentColor : Color.clear, lineWidth: 2)
 
             VStack(spacing: 1) {
                 Text("\(day)")
